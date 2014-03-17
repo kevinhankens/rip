@@ -1,0 +1,10 @@
+source "http://rubygems.org"
+gem 'activerecord'
+gem 'grape'
+gem 'sinatra'
+gem 'open4'
+gem 'json'
+gem 'git'
+gem 'whenever'
+gem 'statemachine'
+gem 'mail'

@@ -1,0 +1,27 @@
+page.replace_html "quartz_screen", @context.message
+
+@context.affordable_items.each do |product|
+  page << "document.getElementById('product_#{product.id}').className = 'affordable';"
+end
+
+@context.non_affordable_items.each do |product|
+  page << "document.getElementById('product_#{product.id}').className = 'non_affordable';"
+end
+
+@context.sold_out_items.each do |product|
+  page.replace_html "product_#{product.id}_price", "<span style=\"color: red;\">SOLD OUT</span>"
+end
+
+if @context.dispensed_item
+  page.replace_html "dispenser", "<p>#{@context.dispensed_item.name}</p>"
+  page.show "dispenser"
+  page.visual_effect :fade, "dispenser", :duration => 3
+end
+
+if @context.change
+  page.replace_html "change_amount", "<p>#{@context.change}</p>"
+  page.show "change_amount"
+  page.visual_effect :fade, "change_amount", :duration => 3
+end
+
+page.replace_html "info", :partial => "main/info"

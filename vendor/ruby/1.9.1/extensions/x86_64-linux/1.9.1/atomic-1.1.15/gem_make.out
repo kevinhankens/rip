@@ -1,0 +1,13 @@
+/home/khankens/.rvm/rubies/ruby-1.9.3-p429/bin/ruby extconf.rb 
+checking for libkern/OSAtomic.h... no
+creating Makefile
+
+make  clean
+
+make
+compiling atomic_reference.c
+linking shared-object atomic_reference.so
+
+make  install
+/usr/bin/install -c -m 0755 atomic_reference.so /var/www/rip/vendor/ruby/1.9.1/gems/atomic-1.1.15/ext/.gem.20140312-30589-17d5g9d
+installing default atomic_reference libraries

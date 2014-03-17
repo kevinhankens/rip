@@ -1,0 +1,21 @@
+
+development:
+  adapter: postgresql
+  database: Vending_dev
+  username: rails
+  password:
+  host: localhost
+
+test:
+  adapter: postgresql
+  database: Vending_test
+  username: rails
+  password:
+  host: localhost
+
+production:
+  adapter: postgresql
+  database: Vending
+  username: rails
+  password: 
+  host: localhost
