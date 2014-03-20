@@ -1,22 +1,24 @@
 require 'pp'
-require './lib/fsm.rb'
+require './lib/task.rb'
+require './lib/pool.rb'
 
 class TestTask < Task
 
   attr_accessor :count
 
   def initialize
-    @count = 0
     super
+    @title = 'Kevin'
+    @count = 1
   end
 
   def states
-    state(:start,  :catch,    :state1, 0, 0) { puts 'state1 override' }
-    state :state1, :catch,    :state1, 0, 3
-    state :state1, 'proceed', :state2, 1, 0
-    state :state2, 'proceed', :state3, 0, 0
-    state :state3, 'back',    :state2, 0, 0
-    state :state3, 'proceed', :finish, 0, 0
+    state :start,  :catch,    :state1, 0,  0
+    state :state1, :catch,    :state1, 0,  3
+    state :state1, 'proceed', :state2, 3,  0
+    state :state2, 'proceed', :state3, 0,  0
+    state :state3, 'back',    :state2, 0,  0
+    state :state3, 'proceed', :finish, 0,  0
   end
 
   def start
@@ -48,7 +50,21 @@ class TestTask < Task
 end
 
 t = TestTask.new
-t.run
-puts t.status
-t.run
-puts t.history
+p = Pool.new
+
+p.runTask t
+pp t.history
+
+#p.insert t
+#
+#n = p.getNext
+#n.run
+#p.update n
+#puts n.status
+#
+#n = p.getNext
+#n.run
+#p.update n
+#puts n.history
+
+
