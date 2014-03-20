@@ -1,1 +1,0 @@
-require 'statemachine/generate/dot_graph/dot_graph_statemachine'
