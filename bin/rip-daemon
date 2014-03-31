@@ -1,0 +1,7 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require './lib/pool.rb'
+
+pool = Pool.new
+pool.daemon

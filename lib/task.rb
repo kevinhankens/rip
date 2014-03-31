@@ -19,6 +19,7 @@ class Task
   attr_accessor :status
   attr_accessor :history
   attr_accessor :title
+  attr_accessor :class_path
 
   @@statuses = {
     :not_started => 1,
@@ -119,15 +120,25 @@ class Task
     @finished = FALSE
     @retries = {}
     @history = []
-    @status = @@statuses[:not_started]
+    @class_path = self.path
+    @status = :not_started
     state :prestart_noop, :catch, :start, 0, 0
     states
     state :finish, :catch, :finish_noop, 0, 0
   end
 
+  def path
+    raise "You must override the states method."
+  end
+
+  def getPath
+    @class_path 
+  end
+
   # Executes state transitions until wait, finish or error.
   def run
     @wait = 0
+    @status = @@statuses[:running]
     while !@finished && @wait == 0 && @status != @@statuses[:error]
       begin
         execState
@@ -135,12 +146,12 @@ class Task
         pp $!
         pp $@
         puts "An error occured."
-        @status = @@statueses[:error]
+        @status = :error
       end
     end
 
     # The only way it exits the loop is if the task is finished or waiting.
-    @status = @finished ? @@statuses[:finished] : @@statuses[:waiting]
+    @status = @finished ? :finished : :waiting
   end
 
 end

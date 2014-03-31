@@ -5,11 +5,16 @@ require './lib/pool.rb'
 class TestTask < Task
 
   attr_accessor :count
+  attr_accessor :myid
 
   def initialize
     super
     @title = 'Kevin'
     @count = 1
+  end
+
+  def path
+    './tasks/test.rb'
   end
 
   def states
@@ -22,49 +27,30 @@ class TestTask < Task
   end
 
   def start
-    puts 'start method'
+    puts "start method #{@myid}"
     '*'
   end
 
   def state1
     @count = @count + 1
-    puts 'state1 method'
+    puts "state1 method #{@myid}"
     return @count < 3 ? 'wait' : 'proceed'
   end
 
   def state2
-    puts 'state2 method'
+    puts "state2 method #{@myid}"
     'proceed'
   end
 
   def state3
     @count = @count + 1
-    puts 'state3 method'
+    puts "state3 method #{@myid}"
     return @count < 5 ? 'back' : 'proceed'
   end
 
   def finish
-    puts 'finish method'
+    puts "finish method #{@myid}"
   end
 
 end
-
-t = TestTask.new
-p = Pool.new
-
-p.runTask t
-pp t.history
-
-#p.insert t
-#
-#n = p.getNext
-#n.run
-#p.update n
-#puts n.status
-#
-#n = p.getNext
-#n.run
-#p.update n
-#puts n.history
-
 
