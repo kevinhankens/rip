@@ -3,8 +3,10 @@
 
 require 'rubygems'
 require 'pp'
+require 'logger'
 require 'sequel'
 require 'mysql2'
+require './lib/task.rb'
 
 class Pool
   attr_reader :db
@@ -12,6 +14,8 @@ class Pool
   # Constructor.
   def initialize
     @db = Sequel.connect('mysql2://root:@localhost/rip')
+    # @todo variable log level/pluggable logger?
+    @logger = Logger.new(STDOUT)
   end
 
   # Creates the required database tables.
@@ -35,12 +39,9 @@ class Pool
   end
 
   # Locks a task to a worker.
-  #
-  # @param [Task] task
-  #   The Task object to lock.
-  def lock task
+  def lock id
     begin
-      @db[:locks].insert :id => task.id, :locked => 1
+      @db[:locks].insert :id => id, :locked => 1
       return TRUE
     rescue
       return FALSE
@@ -48,11 +49,8 @@ class Pool
   end
 
   # Unlocks a task.
-  #
-  # @param [Task] task
-  #   The Task object to lock.
-  def unlock task
-    @db[:locks].where(:id => task.id).delete
+  def unlock id
+    @db[:locks].where(:id => id).delete
   end
 
   # Inserts a Task into the pool to be executed.
@@ -91,16 +89,27 @@ class Pool
   # @return [Task]
   #   The Task object to operate on.
   def getNext
-    # @todo lock the object before returning.
     tasks = @db[:tasks]
-    db_task = tasks.where('status < 16').order(:wake).order(:created).first
+    query_statuses = [
+      Task.getStatusValue(:not_started),
+      Task.getStatusValue(:restarted),
+      Task.getStatusValue(:waiting),
+    ]
+    db_task = tasks.where(:status => query_statuses).order(:wake).order(:created).first
     if !db_task.nil?
-      require db_task[:path]
-      task = Marshal::load(db_task[:data])
-      task.id = db_task[:id]
-      if self.lock task
-        return task
+      if self.lock db_task[:id]
+        begin
+          require db_task[:path]
+          task = Marshal::load(db_task[:data])
+          task.id = db_task[:id]
+          status = Task.getStatusValue :running
+          tasks.where(:id => task.id).update :status => status
+          return task
+        rescue
+          self.unlock db_task[:id]
+        end
       else
+        @logger.warn "lock contention for task #{db_task[:id]}"
         return nil
       end
     end
@@ -112,7 +121,7 @@ class Pool
   #   The Task object to operate on.
   def close task
     update task
-    unlock task
+    unlock task.id
   end
 
   # Runs a task completely until it is finished or has errors.
@@ -135,16 +144,21 @@ class Pool
   #   The id to assign this worker.
   def worker id
     while 1 do
-      # Cheap way to look for additional tasks if there is lock contention.
-      3.times do
-        task = self.getNext
-        if !task.nil?
-          task.run
-          self.close task
+      # hackish way to quickly query in the case of lock contention.
+      5.times do
+        begin
+          task = self.getNext
+          if !task.nil?
+            @logger.debug "Worker #{id} executing task #{task.id}"
+            task.run
+            self.close task
+          end
+        rescue => e
+          @logger.error "Worker #{id} exited with error: #{e}"
         end
       end
       sleep 5
-      puts "Worker #{id}waiting for tasks"
+      @logger.debug "Worker #{id} waiting for tasks"
     end
   end
 
@@ -155,8 +169,8 @@ class Pool
   def daemon workers = 5
     worker_list = []
     workers.times do |id|
-      pp "Starting worker #{id}"
-      worker_list[id] = Thread.new { worker id }
+      @logger.info "Starting worker #{id}"
+      worker_list[id] = Thread.new(id) { |id| worker id }
     end
 
     worker_list.each {|worker| worker.join;}

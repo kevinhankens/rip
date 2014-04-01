@@ -39,6 +39,7 @@ class TestTask < Task
 
   def state2
     puts "state2 method #{@myid}"
+    sleep rand(1..3)
     'proceed'
   end
 

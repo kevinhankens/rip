@@ -27,9 +27,13 @@ class Task
     :running     => 4,
     :waiting     => 8,
     :error       => 16,
-    :finished    => 36,
+    :finished    => 32,
     :killed      => 64,
   }
+
+  def self.getStatusValue status
+    @@statuses[status]
+  end
 
   # Retrieves the current status.
   def getStatus
