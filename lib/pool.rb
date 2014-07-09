@@ -6,6 +6,7 @@ require 'pp'
 require 'logger'
 require 'sequel'
 require 'mysql2'
+require 'celluloid/autostart'
 require './lib/task.rb'
 
 class Pool
